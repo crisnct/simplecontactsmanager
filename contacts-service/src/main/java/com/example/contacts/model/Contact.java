@@ -31,7 +31,6 @@ public class Contact {
     private String address;
 
     @Lob
-    @Basic(fetch = FetchType.LAZY)
     @Column(name = "picture_data")
     private byte[] pictureData;
 

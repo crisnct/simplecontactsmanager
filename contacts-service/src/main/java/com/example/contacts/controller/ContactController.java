@@ -71,7 +71,7 @@ public class ContactController {
     }
 
     @GetMapping("/{id}/picture")
-    public ResponseEntity<byte[]> getPicture(@PathVariable Long id) {
+    public ResponseEntity<byte[]> getPicture(@PathVariable("id") Long id) {
         ContactService.PicturePayload payload = contactService.loadPicture(id);
         String contentType = payload.contentType();
         MediaType mediaType = (contentType != null && !contentType.isBlank())
