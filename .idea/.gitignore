@@ -1,0 +1,14 @@
+# Default ignored files
+/shelf/
+/workspace.xml
+/compiler.xml
+.idea
+../.idea
+/copilot.data.migration.agent.xml
+/copilot.data.migration.ask.xml
+/copilot.data.migration.ask2agent.xml
+/copilot.data.migration.edit.xml
+/encodings.xml
+/jarRepositories.xml
+/misc.xml
+/vcs.xml

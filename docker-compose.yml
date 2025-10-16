@@ -1,0 +1,86 @@
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: scm-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: contacts_db
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test12345678
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    container_name: scm-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: scm-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:29092,PLAINTEXT_HOST://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    ports:
+      - "9092:9092"
+
+  weather-service:
+    build:
+      context: .
+      dockerfile: weather-service/Dockerfile
+    container_name: scm-weather
+    environment:
+      SERVER_PORT: 8081
+    ports:
+      - "8081:8081"
+
+  contacts-service:
+    build:
+      context: .
+      dockerfile: contacts-service/Dockerfile
+    container_name: scm-contacts
+    depends_on:
+      mysql:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+      weather-service:
+        condition: service_started
+    environment:
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: contacts_db
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test12345678
+      # Kafka exposes 29092 for in-cluster clients; host access stays on 9092.
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_SIGNUP_TOPIC: user-signups
+      WEATHER_SERVICE_URL: http://weather-service:8081
+      SERVER_PORT: 8080
+    ports:
+      - "8080:8080"
+
+volumes:
+  mysql_data:
