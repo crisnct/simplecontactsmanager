@@ -94,3 +94,19 @@ databaseChangeLog:
                   name: name
                   type: VARCHAR(200)
             indexName: idx_contacts_name
+  - changeSet:
+      id: 3
+      author: codex
+      changes:
+        - addColumn:
+            tableName: contacts
+            columns:
+              - column:
+                  name: picture_data
+                  type: MEDIUMBLOB
+              - column:
+                  name: picture_content_type
+                  type: VARCHAR(100)
+        - dropColumn:
+            columnName: picture_url
+            tableName: contacts

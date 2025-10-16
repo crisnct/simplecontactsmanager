@@ -13,5 +13,5 @@ FROM eclipse-temurin:21-jre
 WORKDIR /app
 ENV SPRING_PROFILES_ACTIVE=prod
 COPY --from=builder /workspace/weather-service/target/weather-service-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8081
+EXPOSE 9000
 ENTRYPOINT ["java","-jar","/app/app.jar"]

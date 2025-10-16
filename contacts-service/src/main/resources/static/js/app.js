@@ -19,7 +19,9 @@ const elements = {
     modalAlert: document.getElementById('modalAlert'),
     nameInput: document.getElementById('contactName'),
     addressInput: document.getElementById('contactAddress'),
-    pictureInput: document.getElementById('contactPicture')
+    pictureInput: document.getElementById('contactPicture'),
+    currentPictureWrapper: document.getElementById('currentPictureWrapper'),
+    currentPicturePreview: document.getElementById('currentPicturePreview')
 };
 
 const debounce = (fn, delay = 300) => {
@@ -32,9 +34,10 @@ const debounce = (fn, delay = 300) => {
 
 async function fetchCurrentUser() {
     try {
-        const response = await fetch('/api/auth/me', {credentials: 'include'});
+        const response = await fetch('/api/auth/me', { credentials: 'include' });
         if (response.ok) {
-            state.user = await response.json();
+            const data = await response.json();
+            state.user = data.authenticated ? { username: data.username } : null;
         } else {
             state.user = null;
         }
@@ -63,7 +66,7 @@ async function loadContacts(search = '') {
         if (search) {
             params.append('search', search);
         }
-        const response = await fetch(`/api/contacts?${params.toString()}`, {credentials: 'include'});
+        const response = await fetch(`/api/contacts?${params.toString()}`, { credentials: 'include' });
         state.contacts = await response.json();
         renderContacts();
     } catch (error) {
@@ -91,31 +94,37 @@ function renderContacts() {
     elements.contactsContainer.innerHTML = state.contacts.map(contact => {
         const isOwner = state.user && state.user.username === contact.ownerUsername;
         const weather = contact.weather
-            ? `<span class="badge rounded-pill text-bg-info weather-pill">${contact.weather.description} · ${contact.weather.temperatureCelsius.toFixed(1)}°C</span>`
+            ? `<span class="badge rounded-pill text-bg-info weather-pill">${contact.weather.description} &bull; ${contact.weather.temperatureCelsius.toFixed(1)}�C</span>`
             : '';
+        const pictureMarkup = contact.hasPicture
+            ? `<img src="/api/contacts/${contact.id}/picture?ts=${encodeURIComponent(contact.updatedAt)}" alt="${contact.name}" class="contact-card-img">`
+            : `<div class="contact-card-img-placeholder">No image</div>`;
         const buttons = isOwner ? `
-            <div class="d-flex gap-2 mt-2">
+            <div class="d-flex gap-2 mt-3">
                 <button class="btn btn-sm btn-outline-primary" data-action="edit" data-id="${contact.id}">Edit</button>
                 <button class="btn btn-sm btn-outline-danger" data-action="delete" data-id="${contact.id}">Delete</button>
             </div>` : '';
-        const picture = contact.pictureUrl
-            ? `<img src="${contact.pictureUrl}" alt="${contact.name}" class="contact-card-img" onerror="this.src='https://via.placeholder.com/400x180?text=No+Image';">`
-            : `<img src="https://via.placeholder.com/400x180?text=No+Image" alt="No image" class="contact-card-img">`;
 
         return `
             <div class="col-12 col-md-6 col-lg-4">
                 <div class="card h-100 contact-card">
-                    ${picture}
                     <div class="card-body d-flex flex-column">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h2 class="h5 card-title mb-0">${contact.name}</h2>
-                            ${weather}
+                        <div class="d-flex gap-3 align-items-start mb-3">
+                            <div class="flex-shrink-0 text-center">
+                                ${pictureMarkup}
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <h2 class="h5 card-title mb-0">${contact.name}</h2>
+                                    ${weather}
+                                </div>
+                                <p class="card-text mt-2 mb-0">${contact.address}</p>
+                            </div>
                         </div>
-                        <p class="card-text flex-grow-1">${contact.address}</p>
-                        <div class="mt-3">
+                        <div class="mt-auto">
                             <span class="badge text-bg-secondary">Owner: ${contact.ownerUsername}</span>
+                            ${buttons}
                         </div>
-                        ${buttons}
                     </div>
                 </div>
             </div>`;
@@ -134,6 +143,13 @@ function openCreateModal() {
     elements.contactModalTitle.textContent = 'New Contact';
     elements.contactForm.reset();
     elements.modalAlert.innerHTML = '';
+    if (elements.currentPictureWrapper) {
+        elements.currentPictureWrapper.classList.add('d-none');
+    }
+    if (elements.currentPicturePreview) {
+        elements.currentPicturePreview.src = '';
+        elements.currentPicturePreview.alt = 'Contact picture placeholder';
+    }
     elements.contactModal.show();
 }
 
@@ -144,9 +160,27 @@ function openEditModal(id) {
     }
     state.editingContactId = contact.id;
     elements.contactModalTitle.textContent = 'Edit Contact';
+    elements.contactForm.reset();
     elements.nameInput.value = contact.name;
     elements.addressInput.value = contact.address;
-    elements.pictureInput.value = contact.pictureUrl || '';
+    if (elements.pictureInput) {
+        elements.pictureInput.value = '';
+    }
+    if (elements.currentPictureWrapper) {
+        if (contact.hasPicture) {
+            elements.currentPictureWrapper.classList.remove('d-none');
+            if (elements.currentPicturePreview) {
+                elements.currentPicturePreview.src = `/api/contacts/${contact.id}/picture?ts=${encodeURIComponent(contact.updatedAt)}`;
+                elements.currentPicturePreview.alt = `${contact.name} picture`;
+            }
+        } else {
+            elements.currentPictureWrapper.classList.add('d-none');
+            if (elements.currentPicturePreview) {
+                elements.currentPicturePreview.src = '';
+                elements.currentPicturePreview.alt = 'Contact picture placeholder';
+            }
+        }
+    }
     elements.modalAlert.innerHTML = '';
     elements.contactModal.show();
 }
@@ -154,11 +188,12 @@ function openEditModal(id) {
 async function upsertContact(event) {
     event.preventDefault();
     elements.modalAlert.innerHTML = '';
-    const payload = {
-        name: elements.nameInput.value.trim(),
-        address: elements.addressInput.value.trim(),
-        pictureUrl: elements.pictureInput.value.trim()
-    };
+    const formData = new FormData();
+    formData.append('name', elements.nameInput.value.trim());
+    formData.append('address', elements.addressInput.value.trim());
+    if (elements.pictureInput?.files && elements.pictureInput.files[0]) {
+        formData.append('picture', elements.pictureInput.files[0]);
+    }
 
     const method = state.editingContactId ? 'PUT' : 'POST';
     const url = state.editingContactId
@@ -169,12 +204,16 @@ async function upsertContact(event) {
         const response = await fetch(url, {
             method,
             credentials: 'include',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
+            body: formData
         });
         if (!response.ok) {
-            const data = await response.json();
-            throw new Error(data.error || Object.values(data).join(', ') || 'Unable to save contact.');
+            let message = 'Unable to save contact.';
+            const contentType = response.headers.get('Content-Type');
+            if (contentType && contentType.includes('application/json')) {
+                const data = await response.json();
+                message = data.message || data.error || Object.values(data).join(', ') || message;
+            }
+            throw new Error(message);
         }
         elements.contactModal.hide();
         await loadContacts(elements.searchInput.value.trim());

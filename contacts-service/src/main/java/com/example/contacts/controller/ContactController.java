@@ -11,10 +11,10 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -38,16 +38,16 @@ public class ContactController {
         return contactService.listContacts(search);
     }
 
-    @PostMapping
-    public ResponseEntity<ContactResponse> create(@Valid @RequestBody ContactRequest request,
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ContactResponse> create(@Valid @ModelAttribute ContactRequest request,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
         ContactResponse response = contactService.create(request, userDetails.getUsername());
         return ResponseEntity.status(201).body(response);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ContactResponse> update(@PathVariable Long id,
-                                                  @Valid @RequestBody ContactRequest request,
+                                                  @Valid @ModelAttribute ContactRequest request,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
         ContactResponse response = contactService.update(id, request, userDetails.getUsername());
         return ResponseEntity.ok(response);
@@ -68,5 +68,17 @@ public class ContactController {
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename*=UTF-8''" + filename)
                 .contentType(MediaType.parseMediaType("text/csv"))
                 .body(csv);
+    }
+
+    @GetMapping("/{id}/picture")
+    public ResponseEntity<byte[]> getPicture(@PathVariable Long id) {
+        ContactService.PicturePayload payload = contactService.loadPicture(id);
+        String contentType = payload.contentType();
+        MediaType mediaType = (contentType != null && !contentType.isBlank())
+                ? MediaType.parseMediaType(contentType)
+                : MediaType.APPLICATION_OCTET_STREAM;
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .body(payload.data());
     }
 }

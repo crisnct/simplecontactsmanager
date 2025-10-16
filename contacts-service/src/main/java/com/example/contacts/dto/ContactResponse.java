@@ -6,7 +6,7 @@ public class ContactResponse {
     private Long id;
     private String name;
     private String address;
-    private String pictureUrl;
+    private boolean hasPicture;
     private String ownerUsername;
     private Instant updatedAt;
     private WeatherInfo weather;
@@ -14,12 +14,12 @@ public class ContactResponse {
     public ContactResponse() {
     }
 
-    public ContactResponse(Long id, String name, String address, String pictureUrl,
+    public ContactResponse(Long id, String name, String address, boolean hasPicture,
                            String ownerUsername, Instant updatedAt, WeatherInfo weather) {
         this.id = id;
         this.name = name;
         this.address = address;
-        this.pictureUrl = pictureUrl;
+        this.hasPicture = hasPicture;
         this.ownerUsername = ownerUsername;
         this.updatedAt = updatedAt;
         this.weather = weather;
@@ -49,12 +49,12 @@ public class ContactResponse {
         this.address = address;
     }
 
-    public String getPictureUrl() {
-        return pictureUrl;
+    public boolean isHasPicture() {
+        return hasPicture;
     }
 
-    public void setPictureUrl(String pictureUrl) {
-        this.pictureUrl = pictureUrl;
+    public void setHasPicture(boolean hasPicture) {
+        this.hasPicture = hasPicture;
     }
 
     public String getOwnerUsername() {

@@ -4,4 +4,9 @@
 /compiler.xml
 .idea
 /.idea
+/contacts-service/target
+/contacts-service/target/*.*
+/weather-service/target
+/weather-service/target/*.*
+MANIFEST.MF
 

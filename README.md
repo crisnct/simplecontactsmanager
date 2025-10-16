@@ -43,7 +43,7 @@ Configure environment variables as needed (see below) before launching `spring-b
 | `MYSQL_PASSWORD` | `contacts_pass`         | DB password |
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092`        | Kafka bootstrap servers |
 | `KAFKA_SIGNUP_TOPIC` | `user-signups`          | Kafka topic for sign-up events |
-| `WEATHER_SERVICE_URL` | `http://localhost:8081` | Weather microservice base URL |
+| `WEATHER_SERVICE_URL` | `http://localhost:9000` | Weather microservice base URL |
 
 Liquibase runs automatically on startup and creates required tables.
 
@@ -56,10 +56,10 @@ docker compose up --build
 docker compose down
 ```
 Services:
-- Contacts UI/API: http://localhost:8080
-- Weather microservice: http://localhost:8081
+- Weather microservice: http://localhost:9000
+- Contacts UI/API: http://localhost:9001
 - Kafka broker: localhost:9092
-- MySQL: localhost:3306 (credentials from table above)
+- MySQL: localhost:3307 (credentials from table above)
 
 The compose file auto-creates Kafka topics and waits for MySQL health before starting the app. MySQL data persists in the `mysql_data` named volume.
 
@@ -76,7 +76,7 @@ docker compose exec kafka kafka-console-consumer.sh \
 ```
 
 ## Application Walkthrough
-1. Visit `http://localhost:8080` to browse public contacts (empty on first run).
+1. Visit `http://localhost:9001` to browse public contacts (empty on first run).
 2. Create an account via `/signup` (AJAX form). This triggers a Kafka `user-signups` message.
 3. Sign in at `/login`, then add/edit/delete contacts directly from the AJAX UI.
 4. Use search to filter by name and export your contacts as CSV.

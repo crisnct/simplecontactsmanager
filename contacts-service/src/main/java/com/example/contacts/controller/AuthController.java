@@ -1,5 +1,6 @@
 package com.example.contacts.controller;
 
+import com.example.contacts.dto.AuthStatusResponse;
 import com.example.contacts.dto.SignupRequest;
 import com.example.contacts.dto.UserResponse;
 import com.example.contacts.model.User;
@@ -44,11 +45,11 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<UserResponse> currentUser(@AuthenticationPrincipal UserDetails principal) {
+    public ResponseEntity<AuthStatusResponse> currentUser(@AuthenticationPrincipal UserDetails principal) {
         if (principal == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return ResponseEntity.ok(new AuthStatusResponse(false, null));
         }
-        return ResponseEntity.ok(new UserResponse(principal.getUsername()));
+        return ResponseEntity.ok(new AuthStatusResponse(true, principal.getUsername()));
     }
 
     private void authenticateAndStoreSession(HttpServletRequest servletRequest,

@@ -1,5 +1,6 @@
 package com.example.contacts.model;
 
+import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -7,6 +8,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
@@ -28,8 +30,13 @@ public class Contact {
     @Column(nullable = false, length = 500)
     private String address;
 
-    @Column(name = "picture_url", length = 500)
-    private String pictureUrl;
+    @Lob
+    @Basic(fetch = FetchType.LAZY)
+    @Column(name = "picture_data")
+    private byte[] pictureData;
+
+    @Column(name = "picture_content_type", length = 100)
+    private String pictureContentType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "owner_id", nullable = false)
@@ -44,10 +51,9 @@ public class Contact {
     public Contact() {
     }
 
-    public Contact(String name, String address, String pictureUrl, User owner) {
+    public Contact(String name, String address, User owner) {
         this.name = name;
         this.address = address;
-        this.pictureUrl = pictureUrl;
         this.owner = owner;
     }
 
@@ -87,12 +93,20 @@ public class Contact {
         this.address = address;
     }
 
-    public String getPictureUrl() {
-        return pictureUrl;
+    public byte[] getPictureData() {
+        return pictureData;
     }
 
-    public void setPictureUrl(String pictureUrl) {
-        this.pictureUrl = pictureUrl;
+    public void setPictureData(byte[] pictureData) {
+        this.pictureData = pictureData;
+    }
+
+    public String getPictureContentType() {
+        return pictureContentType;
+    }
+
+    public void setPictureContentType(String pictureContentType) {
+        this.pictureContentType = pictureContentType;
     }
 
     public User getOwner() {

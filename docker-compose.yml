@@ -52,9 +52,9 @@ services:
       dockerfile: weather-service/Dockerfile
     container_name: scm-weather
     environment:
-      SERVER_PORT: 8081
+      SERVER_PORT: 9000
     ports:
-      - "8081:8081"
+      - "9000:9000"
 
   contacts-service:
     build:
@@ -77,10 +77,10 @@ services:
       # Kafka exposes 29092 for in-cluster clients; host access stays on 9092.
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_SIGNUP_TOPIC: user-signups
-      WEATHER_SERVICE_URL: http://weather-service:8081
-      SERVER_PORT: 8080
+      WEATHER_SERVICE_URL: http://weather-service:9000
+      SERVER_PORT: 9001
     ports:
-      - "8080:8080"
+      - "9001:9001"
 
 volumes:
   mysql_data:
