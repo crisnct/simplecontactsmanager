@@ -2,6 +2,24 @@
 
 Modern Spring Boot address book with authentication, MySQL persistence, Kafka integration, Liquibase migrations, AJAX/Bootstrap UI, and a companion HTTP weather microservice. Everything targets Java 21 and is container-ready for local development.
 
+## How to start the apps
+- Download Docker Desktop 4.x and ensure it's running.
+- Set the following environment variables on your system:
+  - MYSQL_ROOT_PASSWORD - required
+  - MYSQL_USER - required
+  - MYSQL_PASSWORD - required
+  - MYSQL_PORT - optional, default is 3307
+- The contacts-service app will start on port 9001 and the weather-service app will start on port 9000. So if one of those ports are taken by other process then feel free to change it in the docker-compose.yml and DockerFile files.
+- In the simplecontactsmanager folder perform this command: 
+```bash
+  docker compose up --build
+```
+- Wait until all services are started in Docker.
+- Access the frontend of contacts app in browser at: `http://localhost:9001`
+- Stop the apps by running:
+```bash
+  docker compose down
+```
 ## Features
 - User registration & login (Spring Security, BCrypt). Sign-up emits Kafka `user-signups` events consumed in-app.
 - Contact CRUD with ownership rules: listing is public, but create/update/delete/export require login.

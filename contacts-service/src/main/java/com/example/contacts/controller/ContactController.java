@@ -46,7 +46,7 @@ public class ContactController {
     }
 
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<ContactResponse> update(@PathVariable Long id,
+    public ResponseEntity<ContactResponse> update(@PathVariable("id") Long id,
                                                   @Valid @ModelAttribute ContactRequest request,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
         ContactResponse response = contactService.update(id, request, userDetails.getUsername());
@@ -54,7 +54,7 @@ public class ContactController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id,
+    public ResponseEntity<Void> delete(@PathVariable("id") Long id,
                                        @AuthenticationPrincipal UserDetails userDetails) {
         contactService.delete(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();

@@ -1,4 +1,4 @@
-const state = {
+ï»¿const state = {
     user: null,
     contacts: [],
     editingContactId: null
@@ -94,7 +94,7 @@ function renderContacts() {
     elements.contactsContainer.innerHTML = state.contacts.map(contact => {
         const isOwner = state.user && state.user.username === contact.ownerUsername;
         const weather = contact.weather
-            ? `<span class="badge rounded-pill text-bg-info weather-pill">${contact.weather.description} &bull; ${contact.weather.temperatureCelsius.toFixed(1)}°C</span>`
+            ? `<span class="badge rounded-pill text-bg-info weather-pill">${contact.weather.description} &bull; ${contact.weather.temperatureCelsius.toFixed(1)}&deg;C</span>`
             : '';
         const pictureMarkup = contact.hasPicture
             ? `<img src="/api/contacts/${contact.id}/picture?ts=${encodeURIComponent(contact.updatedAt)}" alt="${contact.name}" class="contact-card-img">`
@@ -114,11 +114,7 @@ function renderContacts() {
                                 ${pictureMarkup}
                             </div>
                             <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-start">
-                                    <h2 class="h5 card-title mb-0">${contact.name}</h2>
-                                    ${weather}
-                                </div>
-                                <p class="card-text mt-2 mb-0">${contact.address}</p>
+                                <div class="d-flex justify-content-between align-items-start"><h2 class="h5 card-title mb-0">${contact.name}</h2></div><p class="card-text mt-2 mb-0">${contact.address}</p>${contact.weather ? `<div class="mt-2">${weather}</div>` : ``}
                             </div>
                         </div>
                         <div class="mt-auto">
@@ -261,3 +257,6 @@ function registerEventListeners() {
     await fetchCurrentUser();
     await loadContacts();
 })();
+
+
+

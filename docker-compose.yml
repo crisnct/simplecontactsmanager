@@ -5,10 +5,10 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: contacts_db
-      MYSQL_USER: test
-      MYSQL_PASSWORD: test12345678
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     ports:
-      - "3307:3306"
+      - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
@@ -72,8 +72,8 @@ services:
       MYSQL_HOST: mysql
       MYSQL_PORT: 3306
       MYSQL_DATABASE: contacts_db
-      MYSQL_USER: test
-      MYSQL_PASSWORD: test12345678
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       # Kafka exposes 29092 for in-cluster clients; host access stays on 9092.
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_SIGNUP_TOPIC: user-signups
