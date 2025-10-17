@@ -9,7 +9,7 @@ Modern Spring Boot address book with authentication, MySQL persistence, Kafka in
   - MYSQL_USER - required
   - MYSQL_PASSWORD - required
   - MYSQL_PORT - optional, default is 3307
-- The contacts-service app will start on port 9001 and the weather-service app will start on port 9000. So if one of those ports are taken by other process then feel free to change it in the docker-compose.yml and DockerFile files.
+- The contacts-service app will start on port 9001 and the weather-service app will start on port 9000. So if one of those ports are taken by other process then feel free to change it in the docker-compose.yml, DockerFile and application.yml files.
 - In the simplecontactsmanager folder perform this command: 
 ```bash
   docker compose up --build

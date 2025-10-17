@@ -7,6 +7,7 @@ import com.example.contacts.model.User;
 import com.example.contacts.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Slf4j
 public class AuthController {
 
     private final UserService userService;
@@ -39,7 +41,9 @@ public class AuthController {
     @PostMapping("/signup")
     public ResponseEntity<UserResponse> signup(@Valid @RequestBody SignupRequest request,
                                                HttpServletRequest servletRequest) {
+        log.info("Processing signup for username '{}'", request.getUsername());
         User user = userService.register(request);
+        log.debug("Signup successful for '{}', creating authenticated session", user.getUsername());
         authenticateAndStoreSession(servletRequest, request.getUsername(), request.getPassword());
         return ResponseEntity.status(HttpStatus.CREATED).body(new UserResponse(user.getUsername()));
     }
@@ -47,14 +51,17 @@ public class AuthController {
     @GetMapping("/me")
     public ResponseEntity<AuthStatusResponse> currentUser(@AuthenticationPrincipal UserDetails principal) {
         if (principal == null) {
+            log.debug("Unauthenticated /me request");
             return ResponseEntity.ok(new AuthStatusResponse(false, null));
         }
+        log.debug("Authenticated /me request for '{}'", principal.getUsername());
         return ResponseEntity.ok(new AuthStatusResponse(true, principal.getUsername()));
     }
 
     private void authenticateAndStoreSession(HttpServletRequest servletRequest,
                                              String username,
                                              String rawPassword) {
+        log.trace("Authenticating user '{}' for session persistence", username);
         UsernamePasswordAuthenticationToken authRequest =
                 new UsernamePasswordAuthenticationToken(username, rawPassword);
         Authentication authentication = authenticationManager.authenticate(authRequest);

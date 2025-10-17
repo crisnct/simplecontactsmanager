@@ -1,8 +1,7 @@
 package com.example.contacts.service;
 
 import com.example.contacts.dto.WeatherInfo;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -14,9 +13,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Service
+@Slf4j
 public class WeatherClient {
-
-    private static final Logger log = LoggerFactory.getLogger(WeatherClient.class);
 
     private final RestClient restClient;
     private final Duration cacheTtl;
@@ -36,8 +34,10 @@ public class WeatherClient {
         String key = location.trim().toLowerCase();
         CacheEntry cached = cache.get(key);
         if (cached != null && !cached.isExpired(cacheTtl)) {
+            log.trace("Returning cached weather for '{}'", location);
             return cached.info();
         }
+        log.debug("Requesting weather data for '{}' from weather-service", location);
         try {
             WeatherInfo response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path("/api/weather")

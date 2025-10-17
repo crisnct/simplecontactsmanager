@@ -4,6 +4,7 @@ import com.example.contacts.dto.ContactRequest;
 import com.example.contacts.dto.ContactResponse;
 import com.example.contacts.service.ContactService;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 @RestController
+@Slf4j
 @RequestMapping("/api/contacts")
 public class ContactController {
 
@@ -35,12 +37,18 @@ public class ContactController {
 
     @GetMapping
     public List<ContactResponse> list(@RequestParam(value = "search", required = false) String search) {
+        if (search == null || search.isBlank()) {
+            log.info("Fetching contacts list without search filter");
+        } else {
+            log.info("Fetching contacts list with search='{}'", search);
+        }
         return contactService.listContacts(search);
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ContactResponse> create(@Valid @ModelAttribute ContactRequest request,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("User '{}' creating new contact '{}'", userDetails.getUsername(), request.getName());
         ContactResponse response = contactService.create(request, userDetails.getUsername());
         return ResponseEntity.status(201).body(response);
     }
@@ -49,6 +57,7 @@ public class ContactController {
     public ResponseEntity<ContactResponse> update(@PathVariable("id") Long id,
                                                   @Valid @ModelAttribute ContactRequest request,
                                                   @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("User '{}' updating contact id={} with name='{}'", userDetails.getUsername(), id, request.getName());
         ContactResponse response = contactService.update(id, request, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
@@ -56,12 +65,14 @@ public class ContactController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable("id") Long id,
                                        @AuthenticationPrincipal UserDetails userDetails) {
+        log.info("User '{}' deleting contact id={}", userDetails.getUsername(), id);
         contactService.delete(id, userDetails.getUsername());
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping(value = "/export", produces = "text/csv")
     public ResponseEntity<String> export(@AuthenticationPrincipal UserDetails userDetails) {
+        log.info("User '{}' exporting contacts to CSV", userDetails.getUsername());
         String csv = contactService.exportCsv(userDetails.getUsername());
         String filename = URLEncoder.encode("contacts.csv", StandardCharsets.UTF_8);
         return ResponseEntity.ok()
@@ -72,6 +83,7 @@ public class ContactController {
 
     @GetMapping("/{id}/picture")
     public ResponseEntity<byte[]> getPicture(@PathVariable("id") Long id) {
+        log.debug("Loading picture for contact id={}", id);
         ContactService.PicturePayload payload = contactService.loadPicture(id);
         String contentType = payload.contentType();
         MediaType mediaType = (contentType != null && !contentType.isBlank())

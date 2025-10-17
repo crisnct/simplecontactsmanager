@@ -2,8 +2,12 @@ package com.example.contacts.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.springframework.web.multipart.MultipartFile;
 
+@Data
+@NoArgsConstructor
 public class ContactRequest {
 
     @NotBlank
@@ -15,31 +19,4 @@ public class ContactRequest {
     private String address;
 
     private MultipartFile picture;
-
-    public ContactRequest() {
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    public MultipartFile getPicture() {
-        return picture;
-    }
-
-    public void setPicture(MultipartFile picture) {
-        this.picture = picture;
-    }
 }

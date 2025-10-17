@@ -8,6 +8,7 @@ import com.example.contacts.model.User;
 import com.example.contacts.repository.ContactRepository;
 import com.example.contacts.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +28,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ContactService {
 
     private static final int MAX_IMAGE_WIDTH = 500;
@@ -51,6 +53,11 @@ public class ContactService {
 
     @Transactional(readOnly = true)
     public List<ContactResponse> listContacts(String search) {
+        if (search == null || search.isBlank()) {
+            log.debug("Listing all contacts");
+        } else {
+            log.debug("Listing contacts with search='{}'", search);
+        }
         List<Contact> contacts;
         if (search != null && !search.isBlank()) {
             contacts = contactRepository.findByNameContainingIgnoreCaseOrderByNameAsc(search.trim());
@@ -64,16 +71,19 @@ public class ContactService {
 
     @Transactional
     public ContactResponse create(ContactRequest request, String username) {
+        log.info("Creating new contact '{}' for user '{}'", request.getName(), username);
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Contact contact = new Contact(request.getName(), request.getAddress(), owner);
         applyPicture(contact, request.getPicture());
         Contact saved = contactRepository.save(contact);
+        log.debug("Contact id={} created for user '{}'", saved.getId(), username);
         return toResponse(saved);
     }
 
     @Transactional
     public ContactResponse update(Long id, ContactRequest request, String username) {
+        log.info("Updating contact id={} for user '{}'", id, username);
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Contact contact = contactRepository.findByIdAndOwner(id, owner)
@@ -82,22 +92,26 @@ public class ContactService {
         contact.setAddress(request.getAddress());
         applyPicture(contact, request.getPicture());
         Contact updated = contactRepository.save(contact);
+        log.debug("Contact id={} updated for user '{}'", id, username);
         return toResponse(updated);
     }
 
     @Transactional
     public void delete(Long id, String username) {
+        log.info("Deleting contact id={} for user '{}'", id, username);
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         Contact contact = contactRepository.findByIdAndOwner(id, owner)
                 .orElseThrow(() -> new EntityNotFoundException("Contact not found"));
         contactRepository.delete(contact);
+        log.debug("Contact id={} deleted", id);
     }
 
     @Transactional(readOnly = true)
     public String exportCsv(String username) {
         userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
+        log.info("Generating CSV export for user '{}'", username);
         List<Contact> contacts = contactRepository.findAllByOrderByNameAsc();
         StringBuilder builder = new StringBuilder();
         builder.append("name,address,pictureAvailable,owner,updatedAt\n");
@@ -108,6 +122,7 @@ public class ContactService {
                     .append(escape(contact.getOwner().getUsername())).append(',')
                     .append(contact.getUpdatedAt()).append('\n');
         }
+        log.debug("CSV export generated with {} contacts", contacts.size());
         return builder.toString();
     }
 
@@ -138,6 +153,8 @@ public class ContactService {
     private void applyPicture(Contact contact, MultipartFile picture) {
         PicturePayload payload = processPicture(picture);
         if (payload != null) {
+            log.debug("Applying picture ({} bytes, {}) to contact id={}",
+                    payload.data().length, payload.contentType(), contact.getId());
             contact.setPictureData(payload.data());
             contact.setPictureContentType(payload.contentType());
         }
@@ -145,16 +162,19 @@ public class ContactService {
 
     private PicturePayload processPicture(MultipartFile picture) {
         if (picture == null || picture.isEmpty()) {
+            log.debug("No picture provided for processing");
             return null;
         }
         String contentType = picture.getContentType();
         if (contentType == null || !ALLOWED_CONTENT_TYPES.contains(contentType.toLowerCase())) {
+            log.warn("Rejected picture with unsupported content type '{}'", contentType);
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only PNG and JPG images are supported.");
         }
         String formatName = FORMAT_BY_CONTENT_TYPE.get(contentType.toLowerCase());
         try {
             BufferedImage original = ImageIO.read(picture.getInputStream());
             if (original == null) {
+                log.warn("Uploaded file could not be read as an image");
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Unable to process uploaded image.");
             }
             BufferedImage processed = resizeIfNecessary(original, formatName);
@@ -163,6 +183,7 @@ public class ContactService {
                 return new PicturePayload(baos.toByteArray(), contentType);
             }
         } catch (IOException e) {
+            log.error("Failed to read uploaded image: {}", e.getMessage());
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Failed to read uploaded image.");
         }
     }
@@ -207,6 +228,7 @@ public class ContactService {
 
     @Transactional(readOnly = true)
     public PicturePayload loadPicture(Long id) {
+        log.debug("Loading picture data for contact id={}", id);
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contact not found"));
         if (contact.getPictureData() == null || contact.getPictureData().length == 0) {
