@@ -5,6 +5,7 @@ import com.example.contacts.dto.ContactResponse;
 import com.example.contacts.service.ContactService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -29,11 +30,8 @@ import java.util.List;
 @RequestMapping("/api/contacts")
 public class ContactController {
 
-    private final ContactService contactService;
-
-    public ContactController(ContactService contactService) {
-        this.contactService = contactService;
-    }
+    @Autowired
+    private ContactService contactService;
 
     @GetMapping
     public List<ContactResponse> list(@RequestParam(value = "search", required = false) String search) {
@@ -83,7 +81,7 @@ public class ContactController {
 
     @GetMapping("/{id}/picture")
     public ResponseEntity<byte[]> getPicture(@PathVariable("id") Long id) {
-        log.debug("Loading picture for contact id={}", id);
+        log.info("Loading picture for contact id={}", id);
         ContactService.PicturePayload payload = contactService.loadPicture(id);
         String contentType = payload.contentType();
         MediaType mediaType = (contentType != null && !contentType.isBlank())

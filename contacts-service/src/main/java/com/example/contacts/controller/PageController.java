@@ -10,13 +10,13 @@ public class PageController {
 
     @GetMapping("/login")
     public String login() {
-        log.debug("Rendering login page");
+        log.info("Rendering login page");
         return "login";
     }
 
     @GetMapping("/signup")
     public String signup() {
-        log.debug("Rendering signup page");
+        log.info("Rendering signup page");
         return "signup";
     }
 }

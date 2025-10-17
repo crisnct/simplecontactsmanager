@@ -9,6 +9,7 @@ import com.example.contacts.repository.ContactRepository;
 import com.example.contacts.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,24 +40,19 @@ public class ContactService {
             Map.entry("image/jpg", "jpg")
     );
 
-    private final ContactRepository contactRepository;
-    private final UserRepository userRepository;
-    private final WeatherClient weatherClient;
-
-    public ContactService(ContactRepository contactRepository,
-                          UserRepository userRepository,
-                          WeatherClient weatherClient) {
-        this.contactRepository = contactRepository;
-        this.userRepository = userRepository;
-        this.weatherClient = weatherClient;
-    }
+    @Autowired
+    private ContactRepository contactRepository;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private WeatherClient weatherClient;
 
     @Transactional(readOnly = true)
     public List<ContactResponse> listContacts(String search) {
         if (search == null || search.isBlank()) {
-            log.debug("Listing all contacts");
+            log.info("Listing all contacts");
         } else {
-            log.debug("Listing contacts with search='{}'", search);
+            log.info("Listing contacts with search='{}'", search);
         }
         List<Contact> contacts;
         if (search != null && !search.isBlank()) {
@@ -77,7 +73,7 @@ public class ContactService {
         Contact contact = new Contact(request.getName(), request.getAddress(), owner);
         applyPicture(contact, request.getPicture());
         Contact saved = contactRepository.save(contact);
-        log.debug("Contact id={} created for user '{}'", saved.getId(), username);
+        log.info("Contact id={} created for user '{}'", saved.getId(), username);
         return toResponse(saved);
     }
 
@@ -92,7 +88,7 @@ public class ContactService {
         contact.setAddress(request.getAddress());
         applyPicture(contact, request.getPicture());
         Contact updated = contactRepository.save(contact);
-        log.debug("Contact id={} updated for user '{}'", id, username);
+        log.info("Contact id={} updated for user '{}'", id, username);
         return toResponse(updated);
     }
 
@@ -104,7 +100,7 @@ public class ContactService {
         Contact contact = contactRepository.findByIdAndOwner(id, owner)
                 .orElseThrow(() -> new EntityNotFoundException("Contact not found"));
         contactRepository.delete(contact);
-        log.debug("Contact id={} deleted", id);
+        log.info("Contact id={} deleted", id);
     }
 
     @Transactional(readOnly = true)
@@ -122,7 +118,7 @@ public class ContactService {
                     .append(escape(contact.getOwner().getUsername())).append(',')
                     .append(contact.getUpdatedAt()).append('\n');
         }
-        log.debug("CSV export generated with {} contacts", contacts.size());
+        log.info("CSV export generated with {} contacts", contacts.size());
         return builder.toString();
     }
 
@@ -153,7 +149,7 @@ public class ContactService {
     private void applyPicture(Contact contact, MultipartFile picture) {
         PicturePayload payload = processPicture(picture);
         if (payload != null) {
-            log.debug("Applying picture ({} bytes, {}) to contact id={}",
+            log.info("Applying picture ({} bytes, {}) to contact id={}",
                     payload.data().length, payload.contentType(), contact.getId());
             contact.setPictureData(payload.data());
             contact.setPictureContentType(payload.contentType());
@@ -162,7 +158,7 @@ public class ContactService {
 
     private PicturePayload processPicture(MultipartFile picture) {
         if (picture == null || picture.isEmpty()) {
-            log.debug("No picture provided for processing");
+            log.info("No picture provided for processing");
             return null;
         }
         String contentType = picture.getContentType();
@@ -228,7 +224,7 @@ public class ContactService {
 
     @Transactional(readOnly = true)
     public PicturePayload loadPicture(Long id) {
-        log.debug("Loading picture data for contact id={}", id);
+        log.info("Loading picture data for contact id={}", id);
         Contact contact = contactRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Contact not found"));
         if (contact.getPictureData() == null || contact.getPictureData().length == 0) {
@@ -240,4 +236,5 @@ public class ContactService {
     public record PicturePayload(byte[] data, String contentType) {
     }
 }
+
 

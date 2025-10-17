@@ -1,7 +1,9 @@
 package com.example.contacts.service;
 
 import com.example.contacts.dto.WeatherInfo;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
@@ -16,14 +18,20 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class WeatherClient {
 
-    private final RestClient restClient;
-    private final Duration cacheTtl;
+    @Autowired
+    private RestClient.Builder restClientBuilder;
+    @Value("${app.weather.base-url}")
+    private String baseUrl;
+    @Value("${app.weather.cache-ttl-seconds:300}")
+    private long cacheTtlSeconds;
+
+    private RestClient restClient;
+    private Duration cacheTtl;
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
-    public WeatherClient(RestClient.Builder builder,
-                         @Value("${app.weather.base-url}") String baseUrl,
-                         @Value("${app.weather.cache-ttl-seconds:300}") long cacheTtlSeconds) {
-        this.restClient = builder.baseUrl(baseUrl).build();
+    @PostConstruct
+    void init() {
+        this.restClient = restClientBuilder.baseUrl(baseUrl).build();
         this.cacheTtl = Duration.ofSeconds(cacheTtlSeconds);
     }
 
@@ -37,7 +45,7 @@ public class WeatherClient {
             log.trace("Returning cached weather for '{}'", location);
             return cached.info();
         }
-        log.debug("Requesting weather data for '{}' from weather-service", location);
+        log.info("Requesting weather data for '{}' from weather-service", location);
         try {
             WeatherInfo response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path("/api/weather")
@@ -65,3 +73,4 @@ public class WeatherClient {
         }
     }
 }
+

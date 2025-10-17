@@ -2,6 +2,7 @@ package com.example.weather.controller;
 
 import com.example.weather.dto.WeatherResponse;
 import com.example.weather.service.WeatherGeneratorService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,11 +13,8 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/weather")
 public class WeatherController {
 
-    private final WeatherGeneratorService weatherGeneratorService;
-
-    public WeatherController(WeatherGeneratorService weatherGeneratorService) {
-        this.weatherGeneratorService = weatherGeneratorService;
-    }
+    @Autowired
+    private WeatherGeneratorService weatherGeneratorService;
 
     @GetMapping
     public ResponseEntity<WeatherResponse> getWeather(@RequestParam(name = "location", required = false) String location) {

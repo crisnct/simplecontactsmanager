@@ -3,6 +3,7 @@ package com.example.contacts.service;
 import com.example.contacts.model.User;
 import com.example.contacts.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -15,15 +16,12 @@ import java.util.List;
 @Slf4j
 public class DatabaseUserDetailsService implements UserDetailsService {
 
-    private final UserRepository userRepository;
-
-    public DatabaseUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
+    @Autowired
+    private UserRepository userRepository;
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        log.debug("Loading user details for '{}'", username);
+        log.info("Loading user details for '{}'", username);
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
         log.trace("User '{}' found with role '{}'", username, user.getRole());
@@ -34,3 +32,4 @@ public class DatabaseUserDetailsService implements UserDetailsService {
         );
     }
 }
+

@@ -5,6 +5,7 @@ import com.example.contacts.kafka.SignupEvent;
 import com.example.contacts.model.User;
 import com.example.contacts.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,20 +16,14 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
-    private final KafkaTemplate<String, SignupEvent> kafkaTemplate;
-    private final String signupTopic;
-
-    public UserService(UserRepository userRepository,
-                       PasswordEncoder passwordEncoder,
-                       KafkaTemplate<String, SignupEvent> kafkaTemplate,
-                       @Value("${app.kafka.topics.signup}") String signupTopic) {
-        this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
-        this.kafkaTemplate = kafkaTemplate;
-        this.signupTopic = signupTopic;
-    }
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private KafkaTemplate<String, SignupEvent> kafkaTemplate;
+    @Value("${app.kafka.topics.signup}")
+    private String signupTopic;
 
     @Transactional
     public User register(SignupRequest request) {
@@ -43,15 +38,16 @@ public class UserService {
                 "ROLE_USER"
         );
         User saved = userRepository.save(user);
-        log.debug("User '{}' persisted, publishing signup event", saved.getUsername());
+        log.info("User '{}' persisted, publishing signup event", saved.getUsername());
         kafkaTemplate.send(signupTopic, new SignupEvent(saved.getUsername()));
         return saved;
     }
 
     @Transactional(readOnly = true)
     public User findByUsername(String username) {
-        log.debug("Fetching user by username '{}'", username);
+        log.info("Fetching user by username '{}'", username);
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
     }
 }
+

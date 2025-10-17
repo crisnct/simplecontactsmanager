@@ -1,32 +1,19 @@
 package com.example.contacts.kafka;
 
 import java.time.Instant;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+@Data
+@NoArgsConstructor
 public class SignupEvent {
-    private String username;
-    private Instant registeredAt;
 
-    public SignupEvent() {
-    }
+  private String username;
+  private Instant registeredAt = Instant.now();
 
-    public SignupEvent(String username) {
-        this.username = username;
-        this.registeredAt = Instant.now();
-    }
+  public SignupEvent(String username) {
+    this.username = username;
+    this.registeredAt = Instant.now();
+  }
 
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public Instant getRegisteredAt() {
-        return registeredAt;
-    }
-
-    public void setRegisteredAt(Instant registeredAt) {
-        this.registeredAt = registeredAt;
-    }
 }

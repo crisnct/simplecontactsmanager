@@ -35,6 +35,10 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic signupTopic(@Value("${app.kafka.topics.signup}") String topicName) {
-        return TopicBuilder.name(topicName).partitions(1).replicas(1).build();
+        return TopicBuilder
+            .name(topicName)
+            .partitions(1)
+            .replicas(1)
+            .build();
     }
 }
