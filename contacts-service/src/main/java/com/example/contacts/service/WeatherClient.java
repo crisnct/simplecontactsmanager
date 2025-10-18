@@ -23,15 +23,19 @@ public class WeatherClient {
     private String baseUrl;
     @Value("${app.weather.cache-ttl-seconds:300}")
     private long cacheTtlSeconds;
+    @Value("${app.weather.error-cache-ttl-seconds:30}")
+    private long errorCacheTtlSeconds;
 
     private RestClient restClient;
     private Duration cacheTtl;
+    private Duration errorCacheTtl;
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     @PostConstruct
     void init() {
         this.restClient = restClientBuilder.baseUrl(baseUrl).build();
         this.cacheTtl = Duration.ofSeconds(cacheTtlSeconds);
+        this.errorCacheTtl = Duration.ofSeconds(Math.max(1, errorCacheTtlSeconds));
     }
 
     public WeatherInfo fetchWeather(String location) {
@@ -40,7 +44,7 @@ public class WeatherClient {
         }
         String key = location.trim().toLowerCase();
         CacheEntry cached = cache.get(key);
-        if (cached != null && !cached.isExpired(cacheTtl)) {
+        if (cached != null && !cached.isExpired(applyTtl(cached))) {
             log.trace("Returning cached weather for '{}'", location);
             return cached.info();
         }
@@ -53,23 +57,26 @@ public class WeatherClient {
                     .accept(MediaType.APPLICATION_JSON)
                     .retrieve()
                     .body(WeatherInfo.class);
-            if (response == null) {
-                response = new WeatherInfo(location, "Unavailable", 0);
-            }
-            cache.put(key, new CacheEntry(response, Instant.now()));
-            return response;
+            WeatherInfo effective = response != null
+                    ? response
+                    : new WeatherInfo(location, "Unavailable", 0);
+            cache.put(key, new CacheEntry(effective, Instant.now(), false));
+            return effective;
         } catch (Exception e) {
             log.warn("Weather service unavailable for '{}': {}", location, e.getMessage());
             WeatherInfo fallback = new WeatherInfo(location, "Weather service unavailable", 0);
-            cache.put(key, new CacheEntry(fallback, Instant.now()));
+            cache.put(key, new CacheEntry(fallback, Instant.now(), true));
             return fallback;
         }
     }
 
-    private record CacheEntry(WeatherInfo info, Instant cachedAt) {
+    private Duration applyTtl(CacheEntry entry) {
+        return entry.error() ? errorCacheTtl : cacheTtl;
+    }
+
+    private record CacheEntry(WeatherInfo info, Instant cachedAt, boolean error) {
         boolean isExpired(Duration ttl) {
             return cachedAt.plus(ttl).isBefore(Instant.now());
         }
     }
 }
-

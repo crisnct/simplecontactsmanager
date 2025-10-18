@@ -62,6 +62,7 @@ Configure environment variables as needed (see below) before launching `spring-b
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092`        | Kafka bootstrap servers |
 | `KAFKA_SIGNUP_TOPIC` | `user-signups`          | Kafka topic for sign-up events |
 | `WEATHER_SERVICE_URL` | `http://localhost:9000` | Weather microservice base URL |
+| `WEATHER_ERROR_CACHE_TTL_SECONDS` | `30` | Seconds to cache fallback responses when weather service is unavailable |
 
 Liquibase runs automatically on startup and creates required tables.
 
@@ -103,6 +104,7 @@ docker compose exec kafka kafka-console-consumer.sh \
 ## Testing
 - Unit tests are currently minimal; extend using Spring Boot’s test harness (`spring-boot-starter-test`, `spring-security-test` already included).
 - Run `mvn test` in either module to execute new tests.
+- The `contacts-service` system test (`ContactsWeatherSystemTest`) expects a reachable weather service at `WEATHER_SERVICE_URL` (defaults to `http://localhost:9000`). Start the weather-service (via Docker Compose or `mvn spring-boot:run -pl weather-service`) or override the base URL with `test.weather.base-url`/`TEST_WEATHER_BASE_URL` before running the suite.
 
 ## Linting & Formatting
 - Java code follows standard Spring conventions; leverage your IDE’s formatter or `spotless` if desired.
@@ -114,4 +116,3 @@ docker compose exec kafka kafka-console-consumer.sh \
 - **Weather service offline**: the contacts UI gracefully degrades, but ensure `WEATHER_SERVICE_URL` points to a reachable endpoint for full experience.
 
 ---
-

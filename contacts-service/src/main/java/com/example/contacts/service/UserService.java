@@ -7,10 +7,12 @@ import com.example.contacts.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @Slf4j
@@ -30,7 +32,7 @@ public class UserService {
         log.info("Registering new user '{}'", request.getUsername());
         if (userRepository.existsByUsername(request.getUsername())) {
             log.warn("Username '{}' is already taken", request.getUsername());
-            throw new IllegalArgumentException("Username already taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Username already taken");
         }
         User user = new User(
                 request.getUsername(),
