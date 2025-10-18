@@ -105,17 +105,16 @@ public class ContactService {
 
     @Transactional(readOnly = true)
     public String exportCsv(String username) {
-        userRepository.findByUsername(username)
+        User owner = userRepository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found"));
         log.info("Generating CSV export for user '{}'", username);
-        List<Contact> contacts = contactRepository.findAllByOrderByNameAsc();
+        List<Contact> contacts = contactRepository.findByOwnerOrderByNameAsc(owner);
         StringBuilder builder = new StringBuilder();
-        builder.append("name,address,pictureAvailable,owner,updatedAt\n");
+        builder.append("name,address,pictureAvailable,updatedAt\n");
         for (Contact contact : contacts) {
             builder.append(escape(contact.getName())).append(',')
                     .append(escape(contact.getAddress())).append(',')
                     .append(contact.getPictureData() != null && contact.getPictureData().length > 0 ? "yes" : "no").append(',')
-                    .append(escape(contact.getOwner().getUsername())).append(',')
                     .append(contact.getUpdatedAt()).append('\n');
         }
         log.info("CSV export generated with {} contacts", contacts.size());
