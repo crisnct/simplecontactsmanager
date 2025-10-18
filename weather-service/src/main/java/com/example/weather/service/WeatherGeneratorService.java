@@ -1,11 +1,10 @@
 package com.example.weather.service;
 
 import com.example.weather.dto.WeatherResponse;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Random;
+import org.springframework.stereotype.Service;
 
 @Service
 public class WeatherGeneratorService {
