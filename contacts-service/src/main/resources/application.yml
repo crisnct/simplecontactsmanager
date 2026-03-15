@@ -2,7 +2,7 @@ spring:
   application:
     name: contacts-service
   datasource:
-    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3307}/${MYSQL_DATABASE:contacts_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://${MYSQL_HOST:localhost}:${MYSQL_PORT:3306}/${MYSQL_DATABASE:contacts_db}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
     username: ${MYSQL_USER:contacts_user}
     password: ${MYSQL_PASSWORD:contacts_pass}
     driver-class-name: com.mysql.cj.jdbc.Driver

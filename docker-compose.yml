@@ -11,6 +11,7 @@ services:
       - "${MYSQL_PORT}:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./docker/mysql:/docker-entrypoint-initdb.d
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 10s
@@ -74,7 +75,7 @@ services:
       WEATHER_SERVICE_URL: http://weather-service:9000
       SERVER_PORT: 9001
     ports:
-      - "9001:9001"
+      - "9003:9001"
 
 volumes:
   mysql_data:
