@@ -60,9 +60,9 @@ Configure environment variables as needed (see below) before launching `spring-b
 | `MYSQL_USER` | `contacts_user`         | DB user |
 | `MYSQL_PASSWORD` | `contacts_pass`         | DB password |
 | `KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092`        | Kafka bootstrap servers |
-| `KAFKA_SIGNUP_TOPIC` | `user-signups`          | Kafka topic for sign-up events |
+| `KAFKA_SIGNUP_TOPIC` |                         | Kafka topic for sign-up events |
 | `WEATHER_SERVICE_URL` | `http://localhost:9000` | Weather microservice base URL |
-| `WEATHER_ERROR_CACHE_TTL_SECONDS` | `30` | Seconds to cache fallback responses when weather service is unavailable |
+| `WEATHER_ERROR_CACHE_TTL_SECONDS` | `30`                    | Seconds to cache fallback responses when weather service is unavailable |
 
 Liquibase runs automatically on startup and creates required tables.
 

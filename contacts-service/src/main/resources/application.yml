@@ -17,14 +17,12 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.yaml
   kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
     consumer:
       group-id: contacts-service
       auto-offset-reset: earliest
       properties:
-        spring.json.trusted.packages: com.example.contacts.kafka
-        spring.json.value.default.type: com.example.contacts.kafka.SignupEvent
-        spring.json.use.type.headers: false
+        spring.json.trusted.packages: "*"
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
     producer:
@@ -45,4 +43,5 @@ app:
     error-cache-ttl-seconds: ${WEATHER_ERROR_CACHE_TTL_SECONDS:30}
   kafka:
     topics:
-      signup: ${KAFKA_SIGNUP_TOPIC:user-signups}
+      signup: ${KAFKA_SIGNUP_TOPIC:notset}
+      editContact: ${KAFKA_EDIT_CONTACT_TOPIC:notset}

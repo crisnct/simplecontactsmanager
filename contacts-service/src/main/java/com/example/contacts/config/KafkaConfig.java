@@ -1,6 +1,7 @@
 package com.example.contacts.config;
 
-import com.example.contacts.kafka.SignupEvent;
+import com.example.kafka.EditContactEvent;
+import com.example.kafka.SignupEvent;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -20,7 +21,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 public class KafkaConfig {
 
     @Bean
-    public ProducerFactory<String, SignupEvent> signupProducerFactory(KafkaProperties properties) {
+    public ProducerFactory<String, ?> signupProducerFactory(KafkaProperties properties) {
         Map<String, Object> config = new HashMap<>(properties.buildProducerProperties(null));
         config.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         config.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
@@ -28,8 +29,13 @@ public class KafkaConfig {
     }
 
     @Bean
-    public KafkaTemplate<String, SignupEvent> signupKafkaTemplate(ProducerFactory<String, SignupEvent> signupProducerFactory) {
-        return new KafkaTemplate<>(signupProducerFactory);
+    public KafkaTemplate<String, SignupEvent> signupKafkaTemplate(ProducerFactory<String, SignupEvent> factory) {
+        return new KafkaTemplate<>(factory);
+    }
+
+    @Bean
+    public KafkaTemplate<String, EditContactEvent> editContactKafkaTemplate(ProducerFactory<String, EditContactEvent> factory) {
+        return new KafkaTemplate<>(factory);
     }
 
     @Bean
@@ -37,7 +43,17 @@ public class KafkaConfig {
         return TopicBuilder
             .name(topicName)
             .partitions(1)
-            .replicas(1)
+            .replicas(3)
             .build();
     }
+
+    @Bean
+    public NewTopic editContactTopic(@Value("${app.kafka.topics.editContact}") String topicName) {
+        return TopicBuilder
+            .name(topicName)
+            .partitions(10)
+            .replicas(3)
+            .build();
+    }
+
 }

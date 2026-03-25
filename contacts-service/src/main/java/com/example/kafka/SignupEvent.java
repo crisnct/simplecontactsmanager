@@ -1,4 +1,4 @@
-package com.example.contacts.kafka;
+package com.example.kafka;
 
 import java.time.Instant;
 import lombok.Data;

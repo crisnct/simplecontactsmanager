@@ -1,7 +1,7 @@
 package com.example.contacts.service;
 
 import com.example.contacts.dto.SignupRequest;
-import com.example.contacts.kafka.SignupEvent;
+import com.example.kafka.SignupEvent;
 import com.example.contacts.model.User;
 import com.example.contacts.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;

@@ -3,6 +3,7 @@ package com.example.contacts.service;
 import com.example.contacts.dto.ContactRequest;
 import com.example.contacts.dto.ContactResponse;
 import com.example.contacts.dto.WeatherInfo;
+import com.example.kafka.EditContactEvent;
 import com.example.contacts.model.Contact;
 import com.example.contacts.model.User;
 import com.example.contacts.repository.ContactRepository;
@@ -17,11 +18,15 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import javax.imageio.ImageIO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,6 +44,11 @@ public class ContactService {
             Map.entry("image/jpg", "jpg")
     );
 
+    @Value("${app.kafka.topics.editContact}")
+    private String editContactTopic;
+
+    @Autowired
+    private KafkaTemplate<String, EditContactEvent> kafkaTemplate;
     @Autowired
     private ContactRepository contactRepository;
     @Autowired
@@ -88,6 +98,12 @@ public class ContactService {
         applyPicture(contact, request.getPicture());
         Contact updated = contactRepository.save(contact);
         log.info("Contact id={} updated for user '{}'", id, username);
+        CompletableFuture<SendResult<String, EditContactEvent>> kafkaResult
+            = kafkaTemplate.send(editContactTopic, new EditContactEvent(contact.getName()));
+        kafkaResult.thenApplyAsync(c -> {
+            log.info("Kafka producer result: " + c.toString());
+            return c;
+        });
         return toResponse(updated);
     }
 

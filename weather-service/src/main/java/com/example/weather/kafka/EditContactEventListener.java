@@ -9,9 +9,21 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class EditContactEventListener {
 
-  @KafkaListener(topics = "${app.kafka.topics.editContact}", groupId = "weather-service-edit-listener")
+  @KafkaListener(
+    topics = "${app.kafka.topics.editContact}",
+    groupId = "weather-service-edit-listener",
+    containerFactory = "kafkaListenerContainerFactory"
+  )
   public void onEdit(EditContactEvent event) {
-    log.info("Received edit contact event for user '{}', registered at {}", event.getUsername(), event.getUpdatedAt());
+    try {
+      log.info("Received edit contact event for user '{}', registered at {}", event.getUsername(), event.getUpdatedAt());
+    } catch (IllegalArgumentException e) {
+      // nu retry → ok
+      log.warn("Invalid event: {}", event);
+    } catch (Exception e) {
+      // IMPORTANT → rethrow
+      throw e;
+    }
   }
 
 }
