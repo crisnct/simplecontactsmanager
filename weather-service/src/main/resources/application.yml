@@ -1,6 +1,24 @@
+server:
+  port: ${SERVER_PORT:9000}
+
 spring:
   application:
     name: weather-service
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+    consumer:
+      group-id: weather-service-edit-listener
+      auto-offset-reset: earliest
+      properties:
+        spring.json.trusted.packages: "*"
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
 
-server:
-  port: ${SERVER_PORT:9000}
+app:
+  kafka:
+    topics:
+      editContact: ${KAFKA_EDIT_CONTACT_TOPIC}
+
+logging:
+  level:
+    org.springframework.kafka: WARN

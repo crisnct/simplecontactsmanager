@@ -7,7 +7,7 @@ COPY weather-service/pom.xml weather-service/
 RUN mvn -pl weather-service -am dependency:go-offline
 
 COPY . .
-RUN mvn -pl weather-service -am package -DskipTests
+RUN mvn -pl weather-service -am install -DskipTests
 
 FROM eclipse-temurin:21-jre
 WORKDIR /app
